@@ -21,6 +21,55 @@ void CubicSpline::setRegularData(const Eigen::VectorXd &x_in,const Eigen::Vector
     }
 }
 
+int CubicSpline::getIndex(const double x) const
+{
+    // given a x value find the closest point in the spline to evalute it
+    // special case if x is regularly space
+    // assumes wrapped data!
+
+    // if special case of end points
+    if(x == spline_data_.x_data(spline_data_.n_points-1))
+    {
+        return spline_data_.n_points-1;
+    }
+    // if regular index can be found by rounding
+    if(spline_data_.is_regular == 1)
+    {
+        return int(floor(x/spline_data_.delta_x));
+    }
+    // if irregular index need to be searched
+    else
+    {
+        auto min_it = spline_data_.x_map.upper_bound(x);
+        if(min_it==spline_data_.x_map.end())
+            return -1;
+        else{
+            return min_it->second-1;
+        }
+
+    }
+}
+
+double CubicSpline::getPoint(double x) const
+{
+    // evaluation of spline a x
+    int index;
+    double x_i;
+    double dx,dx2,dx3;
+    // wrape input to data -> x data needs start at 0 and contain end point!!!
+    x = unwrapInput(x);
+    // compute index
+    index = getIndex(x);
+    // access previous points
+    x_i = spline_data_.x_data(index);
+    // compute diff to point and it's powers
+    dx = x-x_i;
+    dx2 = dx*dx;
+    dx3 = dx*dx2;
+    // return spline value y = a + b dx + c dx^2 + d dx^3
+    return spline_params_.a(index) + spline_params_.b(index)*dx + spline_params_.c(index)*dx2 + spline_params_.d(index)*dx3;
+}
+
 void CubicSpline::setData(const Eigen::VectorXd &x_in,const Eigen::VectorXd &y_in)
 {
     //if x and y have same length, stare given data in spline data struct
@@ -31,6 +80,9 @@ void CubicSpline::setData(const Eigen::VectorXd &x_in,const Eigen::VectorXd &y_i
         spline_data_.n_points = x_in.size();
         spline_data_.is_regular = false;
         spline_data_.delta_x = 0;
+        for(int i = 0;i<x_in.size();i++){
+            spline_data_.x_map[x_in(i)] = i;
+        }
 
         data_set_ = true;
     }
