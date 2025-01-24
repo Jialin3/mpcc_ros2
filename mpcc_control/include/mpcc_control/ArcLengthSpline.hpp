@@ -3,6 +3,7 @@
 
 #include <Eigen/Dense> 
 #include "mpcc_control/CubicSpline.hpp"
+#include "mpcc_control/state.hpp"
 
 
 namespace mpcc {
@@ -17,6 +18,8 @@ struct PathData{
 
 class ArcLengthSpline {
 public:
+    void gen2DSpline(const Eigen::VectorXd &X,const Eigen::VectorXd &Y);
+    double porjectOnSpline(const State &x) const;
 
 private:
     void fitSpline(const Eigen::VectorXd &X,const Eigen::VectorXd &Y);

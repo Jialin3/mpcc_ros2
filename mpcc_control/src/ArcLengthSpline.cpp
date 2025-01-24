@@ -2,7 +2,47 @@
 #include <iostream>
 
 namespace mpcc {
-ArcLengthSpline::ArcLengthSpline(){}
+// ArcLengthSpline::ArcLengthSpline(){}
+
+void ArcLengthSpline::gen2DSpline(const Eigen::VectorXd &X,const Eigen::VectorXd &Y)
+{
+    // generate 2-D arc length parametrized spline given X-Y data
+
+    // remove outliers, depending on how iregular the points are this can help
+    // RawPath clean_path;
+    // clean_path = outlierRemoval(X,Y);
+    // successively fit spline and re-sample
+    fitSpline(X,Y);
+
+}
+
+PathData ArcLengthSpline::resamplePath(const CubicSpline &initial_spline_x,const CubicSpline &initial_spline_y,const double total_arc_length) const
+{
+    // re-sample arc length parametrized X-Y spline path with N_spline data points
+    // using equidistant arc length values
+    // successively re-sample, computing the arc length and then fit the path should
+    // result in close to equidistant points w.r.t. arc length
+
+    // s -> "arc length" where points should be extracted
+    // equilly spaced between 0 and current length of path
+    PathData resampled_path;
+    int N_SPLINE = 5000;
+    resampled_path.n_points=N_SPLINE;
+    resampled_path.s.setLinSpaced(N_SPLINE,0,total_arc_length);
+
+    // initialize new points as zero
+    resampled_path.X.setZero(N_SPLINE);
+    resampled_path.Y.setZero(N_SPLINE);
+
+    // extract X-Y points
+    for(int i=0;i<N_SPLINE;i++)
+    {
+        resampled_path.X(i) = initial_spline_x.getPoint(resampled_path.s(i));
+        resampled_path.Y(i) = initial_spline_y.getPoint(resampled_path.s(i));
+    }
+    return resampled_path;
+}
+
 
 void ArcLengthSpline::fitSpline(const Eigen::VectorXd &X,const Eigen::VectorXd &Y) {
     Eigen::VectorXd s_approximation;

@@ -7,30 +7,67 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 
 # 查找依赖
+# 查找ROS 2的依赖包
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
+find_package(ackermann_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(Eigen3 REQUIRED)  
+find_package(sensor_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(eigen3_cmake_module REQUIRED)
 
 # 添加头文件目录
 include_directories(include)
 
 # 添加可执行文件
-add_executable(mpc_controller src/mpc_controller.cpp src/track.cpp)
-
-# 添加依赖
-ament_target_dependencies(mpc_controller
-  rclcpp
-  std_msgs
-  geometry_msgs
-  Eigen3  # 如果使用了Eigen库
+add_executable(mpc_controller_node 
+  src/mpc_controller.cpp 
+  src/ArcLengthSpline.cpp 
+  src/CubicSpline.cpp 
+  src/mpcc_solver.cpp 
+  src/track.cpp
 )
 
-# 安装可执行文件
+# 链接库
+target_link_libraries(mpc_controller_node
+  ${rclcpp_LIBRARIES}
+  ${ackermann_msgs_LIBRARIES}
+  ${geometry_msgs_LIBRARIES}
+  ${sensor_msgs_LIBRARIES}
+  ${nav_msgs_LIBRARIES}
+  ${tf2_LIBRARIES}
+  ${tf2_ros_LIBRARIES}
+  ${tf2_geometry_msgs_LIBRARIES}
+  Eigen3::Eigen
+)
+
+
+# 安装目标
 install(TARGETS
-  mpc_controller
-  DESTINATION lib/${PROJECT_NAME})
+  mpc_controller_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# 安装头文件
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION include/${PROJECT_NAME}
+)
 
 # 导出依赖
+ament_export_dependencies(
+  rclcpp
+  ackermann_msgs
+  geometry_msgs
+  sensor_msgs
+  nav_msgs
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
+  eigen3_cmake_module
+)
+
+# 安装配置
 ament_package()

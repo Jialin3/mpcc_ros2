@@ -21,6 +21,12 @@ void CubicSpline::setRegularData(const Eigen::VectorXd &x_in,const Eigen::Vector
     }
 }
 
+double CubicSpline::unwrapInput(double x) const
+{
+    double x_max = spline_data_.x_data(spline_data_.n_points-1);
+    return x - x_max*std::floor(x/x_max);
+}
+
 int CubicSpline::getIndex(const double x) const
 {
     // given a x value find the closest point in the spline to evalute it
